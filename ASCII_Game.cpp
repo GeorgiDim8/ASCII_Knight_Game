@@ -15,6 +15,8 @@ const int ENEMY_MAX = 10;
 int EnemyCount = 0;
 char arenaT[A_HEIGHT][A_WIDTH] = {};
 char arena[A_HEIGHT][A_WIDTH] = {};
+int PlatformISave[10] = {};
+int PlatformJSave[10] = {};
 
 int* EnemyX;
 int* EnemyY;
@@ -35,10 +37,10 @@ void UpdateEnemies();
 bool EnemyCollisionCheck(int);
 
 void UpdateWalker(int);
-void UpdateJumper(int);
-void UpdateFlier(int);
-void UpdateCrawler(int);
-void UpdateBoss(int);
+//void UpdateJumper(int);
+//void UpdateFlier(int);
+//void UpdateCrawler(int);
+//void UpdateBoss(int);
 
 void CharacterControl();
 void Graphics();
@@ -62,8 +64,13 @@ void InitializeEnemies()
     EnemyType = new char[ENEMY_MAX];
     EnemyHP = new int[ENEMY_MAX];
 
-    srand(time(0));
-    int Count = rand() % 8 + 2;
+    AddEnemy(A_HEIGHT - 1, A_WIDTH - 2, 'E', 2, 0, 1);
+
+    for(int i = 0; i < 10; i++) {
+        if (!PlatformISave[i])break;
+        if(PlatformISave[i]-1>3)AddEnemy(PlatformISave[i] - 1, PlatformJSave[i]+1, 'E', 2, 0, 1);
+
+    }
 
 }
 
@@ -100,27 +107,28 @@ void UpdateEnemies()
     {
         char x = EnemyType[i];
         if (x == 'E')UpdateWalker(i);
-        else if (x == 'J')UpdateJumper(i);
-        else if (x == 'F')UpdateFlier(i);
-        else if (x == 'C')UpdateCrawler(i);
-        else if (x == 'B')UpdateBoss(i);
+        //else if (x == 'J')UpdateJumper(i);
+        //else if (x == 'F')UpdateFlier(i);
+        //else if (x == 'C')UpdateCrawler(i);
+        //else if (x == 'B')UpdateBoss(i);
     }
 
 }
 
 bool EnemyCollisionCheck(int index)
 {
-    if (arena[EnemyX[index] + EnemyVelX[index]][EnemyY[index]] == '#' ||
-        arena[EnemyX[index] + EnemyVelX[index]][EnemyY[index] + EnemyVelY[index]] != '=' &&
-        arena[EnemyX[index] + EnemyVelX[index]][EnemyY[index] + EnemyVelY[index]] != '#') return true;
+    char next = arena[EnemyX[index] + EnemyVelX[index]][EnemyY[index] + EnemyVelY[index]];
+    if (next == '@') { player[PHP]--; return true; }
+    if (next != ' ') return true;
 
     return false;
 }
 
 void UpdateWalker(int index)
 {
-    if (EnemyCollisionCheck(index))EnemyVelX[index] = -EnemyVelX[index];
-    EnemyX[index] += EnemyVelX[index];
+    if (EnemyCollisionCheck(index) || 
+        arena[EnemyX[index]+1][EnemyY[index]+EnemyVelY[index]]==' ')EnemyVelY[index] = -EnemyVelY[index];
+    EnemyY[index] += EnemyVelY[index];
 }
 
 
@@ -148,6 +156,8 @@ void Check_Fall(int px, int py)
 
 void CharacterControl()
 {
+    if (!player[PHP]) { gameover = true; return; }
+
     if (_kbhit())
     {
         char key = _getch();
@@ -238,7 +248,7 @@ void RandomPlatforms()
     srand(time(0));
     int PlatformI, PlatformJ, PlatformLength;
     int PlatformCount = rand() % 6 + 2;
-    for (int i = 1; i <= PlatformCount; i++)
+    for (int i = 0; i < PlatformCount; i++)
     {
 
         PlatformI = (rand() % 5) * 3 + 4;
@@ -247,13 +257,16 @@ void RandomPlatforms()
 
         for (int s = 0; s < PlatformLength; s++)arenaT[PlatformI][PlatformJ + s] = '=';
 
+        PlatformISave[i] = PlatformI;
+        PlatformJSave[i] = PlatformJ;
+
     }
 }
 
 void Graphics()
 {
     Arena_Template();
-    std::cout << "HP: " << HP << "      " << "(a/ d move, w jump, double jump, i/j/k/l attack) PFALL - " << player[PFALL] << std::endl;
+    std::cout << "HP: " << player[PHP] << "      " << "(a/ d move, w jump, double jump, i/j/k/l attack) PFALL - " << gameover << std::endl;
 
     arena[player[0]][player[1]] = '@';
 
@@ -314,8 +327,9 @@ int main()
     int a = 0;
     InitializePlayer();
     InitializeArena();
+    InitializeEnemies();
     HideCursor();
-    while (!gameover || !levelwon)
+    while (!gameover && !levelwon)
     {
         CharacterControl();
         UpdateEnemies();
@@ -327,7 +341,7 @@ int main()
     }
 
     //Reset Cursor - Gives Rain Graphics
-
+    if (gameover)std::cout << "You Lost" << std::endl;
 
 
     return 0;
