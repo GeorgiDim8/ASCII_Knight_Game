@@ -39,7 +39,7 @@ bool EnemyCollisionCheck(int);
 void UpdateWalker(int);
 //void UpdateJumper(int);
 //void UpdateFlier(int);
-//void UpdateCrawler(int);
+void UpdateCrawler(int);
 //void UpdateBoss(int);
 
 void CharacterControl();
@@ -71,6 +71,10 @@ void InitializeEnemies()
         if(PlatformISave[i]-1>3)AddEnemy(PlatformISave[i] - 1, PlatformJSave[i]+1, 'E', 2, 0, 1);
 
     }
+
+    AddEnemy(A_HEIGHT - 2, A_WIDTH - 2, 'C', 2, 1, 0);
+    AddEnemy(A_HEIGHT - 3, 1, 'C', 2, 1, 0);
+   
 
 }
 
@@ -109,7 +113,7 @@ void UpdateEnemies()
         if (x == 'E')UpdateWalker(i);
         //else if (x == 'J')UpdateJumper(i);
         //else if (x == 'F')UpdateFlier(i);
-        //else if (x == 'C')UpdateCrawler(i);
+        else if (x == 'C')UpdateCrawler(i);
         //else if (x == 'B')UpdateBoss(i);
     }
 
@@ -131,6 +135,11 @@ void UpdateWalker(int index)
     EnemyY[index] += EnemyVelY[index];
 }
 
+void UpdateCrawler(int index) 
+{
+    if (EnemyCollisionCheck(index))EnemyVelX[index] = -EnemyVelX[index];
+    EnemyX[index] += EnemyVelX[index];
+}
 
 int Jump_Max_Height(int start, int py, int span)
 {
