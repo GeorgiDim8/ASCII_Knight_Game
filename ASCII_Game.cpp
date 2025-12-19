@@ -37,7 +37,7 @@ void UpdateEnemies();
 bool EnemyCollisionCheck(int);
 
 void UpdateWalker(int);
-//void UpdateJumper(int);
+void UpdateJumper(int);
 //void UpdateFlier(int);
 void UpdateCrawler(int);
 //void UpdateBoss(int);
@@ -64,7 +64,7 @@ void InitializeEnemies()
     EnemyType = new char[ENEMY_MAX];
     EnemyHP = new int[ENEMY_MAX];
 
-    AddEnemy(A_HEIGHT - 1, A_WIDTH - 2, 'E', 2, 0, 1);
+    AddEnemy(A_HEIGHT - 2, A_WIDTH - 2, 'E', 2, 0, 1);
 
     for(int i = 0; i < 10; i++) {
         if (!PlatformISave[i])break;
@@ -74,6 +74,8 @@ void InitializeEnemies()
 
     AddEnemy(A_HEIGHT - 2, A_WIDTH - 2, 'C', 2, 1, 0);
     AddEnemy(A_HEIGHT - 3, 1, 'C', 2, 1, 0);
+
+    AddEnemy(A_HEIGHT - 2, 4, 'J', 2, 0, 1);
    
 
 }
@@ -111,7 +113,7 @@ void UpdateEnemies()
     {
         char x = EnemyType[i];
         if (x == 'E')UpdateWalker(i);
-        //else if (x == 'J')UpdateJumper(i);
+        else if (x == 'J')UpdateJumper(i);
         //else if (x == 'F')UpdateFlier(i);
         else if (x == 'C')UpdateCrawler(i);
         //else if (x == 'B')UpdateBoss(i);
@@ -139,6 +141,38 @@ void UpdateCrawler(int index)
 {
     if (EnemyCollisionCheck(index))EnemyVelX[index] = -EnemyVelX[index];
     EnemyX[index] += EnemyVelX[index];
+}
+
+void UpdateJumper(int index) 
+{
+    if (EnemyVelX[index])
+    {
+        if (arena[EnemyX[index] + 1][EnemyY[index]] == '#' || arena[EnemyX[index] + 1][EnemyY[index]] == '=')
+        {
+            EnemyVelX[index] = 0;
+            EnemyVelY[index] = 1;
+        }
+    }
+   
+        else
+        {
+          
+         
+            int r = rand() % 10;
+            if (r % 5 == 1) {
+                EnemyX[index] -= (Jump_Max_Height(EnemyX[index], EnemyY[index], 7)-1);
+                EnemyVelX[index] = 1;
+                EnemyVelY[index] = 0;
+                return;
+            }
+            if (EnemyCollisionCheck(index) ||
+                arena[EnemyX[index] + 1][EnemyY[index] + EnemyVelY[index]] == ' ') {
+                 EnemyVelY[index] = -EnemyVelY[index];
+            }
+        }
+            EnemyY[index] += EnemyVelY[index];
+            EnemyX[index] += EnemyVelX[index];
+    
 }
 
 int Jump_Max_Height(int start, int py, int span)
@@ -275,7 +309,7 @@ void RandomPlatforms()
 void Graphics()
 {
     Arena_Template();
-    std::cout << "HP: " << player[PHP] << "      " << "(a/ d move, w jump, double jump, i/j/k/l attack) PFALL - " << gameover << std::endl;
+    std::cout << "HP: " << player[PHP] << "      " << "(a/ d move, w jump, double jump, i/j/k/l attack) PFALL - " << player[PFALL] << std::endl;
 
     arena[player[0]][player[1]] = '@';
 
