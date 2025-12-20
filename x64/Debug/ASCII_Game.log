@@ -1,5 +1,5 @@
 ﻿  ASCII_Game.cpp
-D:\C++ files\ASCII_game\ASCII_Game\ASCII_Game\ASCII_Game.cpp(424,15): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
-D:\C++ files\ASCII_game\ASCII_Game\ASCII_Game\ASCII_Game.cpp(469,19): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
-D:\C++ files\ASCII_game\ASCII_Game\ASCII_Game\ASCII_Game.cpp(469,21): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
+D:\C++ files\ASCII_game\ASCII_Game\ASCII_Game\ASCII_Game.cpp(453,15): warning C4244: 'argument': conversion from 'time_t' to 'unsigned int', possible loss of data
+D:\C++ files\ASCII_game\ASCII_Game\ASCII_Game\ASCII_Game.cpp(499,19): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
+D:\C++ files\ASCII_game\ASCII_Game\ASCII_Game\ASCII_Game.cpp(499,21): warning C4838: conversion from 'int' to 'SHORT' requires a narrowing conversion
   ASCII_Game.vcxproj -> D:\C++ files\ASCII_game\ASCII_Game\x64\Debug\ASCII_Game.exe

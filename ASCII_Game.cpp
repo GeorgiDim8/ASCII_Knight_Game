@@ -19,12 +19,12 @@ char arena[A_HEIGHT][A_WIDTH] = {};
 int PlatformISave[10] = {};
 int PlatformJSave[10] = {};
 
-int* EnemyX = new int[10];
-int* EnemyY = new int[10];
-int* EnemyVelX = new int[10];
-int* EnemyVelY = new int[10];
-char* EnemyType = new char[10];
-int* EnemyHP = new int[10];
+int* EnemyX;
+int* EnemyY;
+int* EnemyVelX;
+int* EnemyVelY;
+char* EnemyType;
+int* EnemyHP;
 
 int* player = new int[10];
 enum PlayerTypes { PX, PY, PHP, PFALL, PDOUBLEJ,PAT,PATDUR };
@@ -50,7 +50,7 @@ bool CheckAttack();
 //void AttackUp();
 void AttackLeft();
 //void AttackDown();
-//void AttackRight();
+void AttackRight();
 void Graphics();
 void RandomPlatforms();
 void Arena_Template();
@@ -76,7 +76,7 @@ void InitializeEnemies()
 
     for(int i = 0; i < 10; i++) {
         if (!PlatformISave[i])break;
-        if(PlatformISave[i]-1>3)AddEnemy(PlatformISave[i] - 1, PlatformJSave[i]+1, 'E', 1, 0, 1);
+        if(PlatformISave[i]-1>3 && PlatformISave[i] - 1<20)AddEnemy(PlatformISave[i] - 1, PlatformJSave[i]+1, 'E', 1, 0, 1);
 
     }
 
@@ -105,9 +105,9 @@ void KillEnemy(int index)
     if (index >= ENEMY_MAX || index < 0)return;
     int last = EnemyCount - 1;
     EnemyX[index] = EnemyX[last];
-    EnemyY[index] = EnemyX[last];
-    EnemyType[index] = EnemyX[last];
-    EnemyHP[index] = EnemyX[last];
+    EnemyY[index] = EnemyY[last];
+    EnemyType[index] = EnemyType[last];
+    EnemyHP[index] = EnemyHP[last];
     EnemyVelX[index] = EnemyVelX[last];
     EnemyVelY[index] = EnemyVelY[last];
 
@@ -132,7 +132,14 @@ void UpdateEnemies()
 bool EnemyCollisionCheck(int index)
 {
     char next = arena[EnemyX[index] + EnemyVelX[index]][EnemyY[index] + EnemyVelY[index]];
-    if (next == '@') { player[PHP]--; return true; }
+
+    if (EnemyX[index] == player[PX] &&
+        EnemyY[index] == player[PY] || next == '@')
+    {
+        player[PHP]--;
+        return true;
+    }
+
     if (next != ' ') return true;
 
     return false;
@@ -344,7 +351,7 @@ void VisualizeAttack()
         //if (at == 1)AttackUp();
          if (at == 2)AttackLeft();
         //else if (at == 3)AttackDown();
-        //else if (at == 4)AttackRight();
+        else if (at == 4)AttackRight();
 
          player[PATDUR]--;
     }
@@ -382,8 +389,30 @@ void AttackLeft()
         int ey = EnemyY[i];
         if (ey == player[PY] - 1) 
         {
-            if (ex == player[PX] || ex == (player[PX] - 1) || ex == (player[PX] + 1))KillEnemy(i);
+            if (ex == player[PX] || ex == (player[PX] - 1) || ex == (player[PX] + 1)) {
+                KillEnemy(i);
+                i--;
+            }
         } 
+
+    }
+
+}
+void AttackRight()
+{
+
+    arena[player[PX]][player[PY] + 1] = '|';
+    arena[player[PX] - 1][player[PY] + 1] = '\\';
+    if (arena[player[PX] + 1][player[PY] + 1] == ' ')arena[player[PX] + 1][player[PY] + 1] = '/';
+
+    for (int i = 0; i < EnemyCount; i++)
+    {
+        int ex = EnemyX[i];
+        int ey = EnemyY[i];
+        if (ey == player[PY] +1)
+        {
+            if (ex == player[PX] || ex == (player[PX] - 1) || ex == (player[PX] + 1))KillEnemy(i);
+        }
 
     }
 
@@ -446,6 +475,7 @@ void Graphics()
 
     arena[player[0]][player[1]] = '@';
 
+    
     for (int i = 0; i < EnemyCount; i++)arena[EnemyX[i]][EnemyY[i]] = EnemyType[i];
 
     for (int i = 0; i < A_HEIGHT; i++)
