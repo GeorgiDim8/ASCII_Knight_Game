@@ -11,6 +11,8 @@ bool levelwon = false;
 const int A_HEIGHT = 20;
 const int A_WIDTH = 70;
 const int ENEMY_MAX = 10;
+const int JUMP = 10;
+const int D_JUMP = 7;
 int EnemyCount = 0;
 char arenaT[A_HEIGHT][A_WIDTH] = {};
 char arena[A_HEIGHT][A_WIDTH] = {};
@@ -25,7 +27,7 @@ char* EnemyType = new char[10];
 int* EnemyHP = new int[10];
 
 int* player = new int[10];
-enum PlayerTypes { PX, PY, PHP, PFALL, PDOUBLEJ };
+enum PlayerTypes { PX, PY, PHP, PFALL, PDOUBLEJ,PAT,PATDUR };
 
 void InitializeArena();
 void InitializePlayer();
@@ -42,6 +44,13 @@ void UpdateCrawler(int);
 //void UpdateBoss(int);
 
 void CharacterControl();
+void UpdatePlayer();
+void VisualizeAttack();
+bool CheckAttack();
+//void AttackUp();
+void AttackLeft();
+//void AttackDown();
+//void AttackRight();
 void Graphics();
 void RandomPlatforms();
 void Arena_Template();
@@ -160,7 +169,7 @@ void UpdateJumper(int index)
          
             int r = rand() % 10;
             if (r % 10 == 1) {
-                EnemyX[index] -= (Jump_Max_Height(EnemyX[index], EnemyY[index], 7)-1);
+                EnemyX[index] -= (Jump_Max_Height(EnemyX[index], EnemyY[index], JUMP-3)-1);
                 EnemyVelX[index] = 1;
                 EnemyVelY[index] = 0;
                 return;
@@ -229,13 +238,11 @@ void Check_Fall(int px, int py)
 
 void CharacterControl()
 {
-    if (!player[PHP]) { gameover = true; return; }
 
     if (_kbhit())
     {
         char key = _getch();
         int JumpSize;
-
 
         if (key == 'A' || key == 'a')
         {
@@ -252,14 +259,14 @@ void CharacterControl()
         {
             if (player[PFALL] == 0)
             {
-                JumpSize = Jump_Max_Height(player[PX], player[PY], 10);
+                JumpSize = Jump_Max_Height(player[PX], player[PY], JUMP);
                 player[PFALL] = JumpSize;
                 player[PX] -= JumpSize;
             }
 
             else if (!player[PDOUBLEJ])
             {
-                JumpSize = Jump_Max_Height(player[PX], player[PY], 7);
+                JumpSize = Jump_Max_Height(player[PX], player[PY], D_JUMP);
                 player[PFALL] += JumpSize;
                 player[PDOUBLEJ] = 1;
                 player[PX] -= JumpSize;
@@ -267,8 +274,43 @@ void CharacterControl()
 
 
         }
+        else if (key == 'i' || key == 'I') 
+        {
+            if(!player[PAT]){
+            player[PAT] = 1;
+            player[PATDUR] = 3;
+            }
+        }
+        else if (key == 'j' || key == 'J')
+        {
+            if (!player[PAT]) {
+                player[PAT] = 2;
+                player[PATDUR] = 3;
+            }
+        }
+        else if (key == 'k' || key == 'K')
+        {
+            if (!player[PAT]) {
+                player[PAT] = 3;
+                player[PATDUR] = 3;
+            }
+        }
+        else if (key == 'l' || key == 'L')
+        {
+            if (!player[PAT]) {
+                player[PAT] = 4;
+                player[PATDUR] = 3;
+            }
+
+        }
 
     }
+
+    
+}
+void UpdatePlayer() 
+{
+    if (!player[PHP]) { gameover = true; return; }
 
     if (player[PFALL])
     {
@@ -284,8 +326,69 @@ void CharacterControl()
 
         if (!player[PFALL])player[PDOUBLEJ] = 0;
     }
+    if (player[PAT]) 
+    {
+        VisualizeAttack();
+    }
+
+
+    
 
 }
+
+void VisualizeAttack()
+{
+    int at = player[PAT];
+    if (player[PATDUR] && CheckAttack()) 
+    {
+        //if (at == 1)AttackUp();
+         if (at == 2)AttackLeft();
+        //else if (at == 3)AttackDown();
+        //else if (at == 4)AttackRight();
+
+         player[PATDUR]--;
+    }
+    else 
+    {
+        player[PAT] = 0;
+        player[PATDUR] = 0;
+    }
+
+}
+
+bool CheckAttack() 
+{
+    int at = player[PAT];
+    if (at == 1 && arena[player[PX] - 1][player[PY]] != '=')return true;
+
+    if (at == 2 && arena[player[PX]][player[PY] - 1] != '#')return true;
+   
+    if(at == 3 && player[PFALL])return true;
+    
+    if (at == 4 && arena[player[PX]][player[PY] +1] != '#')return true;
+
+    return false;
+}
+void AttackLeft()
+{
+    
+    arena[player[PX]][player[PY] - 1] = '|';
+    arena[player[PX]-1][player[PY] - 1] = '/';
+    if(arena[player[PX]+1][player[PY]-1]==' ')arena[player[PX] + 1][player[PY] - 1] = '\\';
+
+    for (int i = 0; i < EnemyCount; i++) 
+    {
+        int ex = EnemyX[i];
+        int ey = EnemyY[i];
+        if (ey == player[PY] - 1) 
+        {
+            if (ex == player[PX] || ex == (player[PX] - 1) || ex == (player[PX] + 1))KillEnemy(i);
+        } 
+
+    }
+
+}
+
 
 void InitializeArena()
 {
@@ -338,8 +441,8 @@ void RandomPlatforms()
 
 void Graphics()
 {
-    Arena_Template();
-    std::cout << "HP: " << player[PHP] << "      " << "(a/ d move, w jump, double jump, i/j/k/l attack) PFALL - " << player[PFALL] << std::endl;
+    
+    std::cout << "HP: " << player[PHP] << "      " << "(a/ d move, w jump, double jump, i/j/k/l attack) PFALL - " << player[PAT] << " "<<player[PATDUR]<< std::endl;
 
     arena[player[0]][player[1]] = '@';
 
@@ -352,7 +455,7 @@ void Graphics()
     }
 
     //ColorCharacters();
-
+    Arena_Template();
 
 }
 
@@ -393,6 +496,8 @@ void InitializePlayer()
     player[PHP] = 5;
     player[PFALL] = 0;
     player[PDOUBLEJ] = 0;
+    player[PAT] = 0;
+    player[PATDUR] = 0;
 }
 
 int main()
@@ -407,6 +512,7 @@ int main()
         
         UpdateEnemies();
         CharacterControl();
+        UpdatePlayer();
         Graphics();
 
         ResetCursor();
