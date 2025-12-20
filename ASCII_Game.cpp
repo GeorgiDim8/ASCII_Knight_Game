@@ -47,9 +47,9 @@ void CharacterControl();
 void UpdatePlayer();
 void VisualizeAttack();
 bool CheckAttack();
-//void AttackUp();
+void AttackUp();
 void AttackLeft();
-//void AttackDown();
+void AttackDown();
 void AttackRight();
 void Graphics();
 void RandomPlatforms();
@@ -337,7 +337,7 @@ void UpdatePlayer()
     {
         VisualizeAttack();
     }
-
+    
 
     
 
@@ -348,9 +348,9 @@ void VisualizeAttack()
     int at = player[PAT];
     if (player[PATDUR] && CheckAttack()) 
     {
-        //if (at == 1)AttackUp();
-         if (at == 2)AttackLeft();
-        //else if (at == 3)AttackDown();
+        if (at == 1)AttackUp();
+        else if (at == 2)AttackLeft();
+        else if (at == 3)AttackDown();
         else if (at == 4)AttackRight();
 
          player[PATDUR]--;
@@ -412,6 +412,44 @@ void AttackRight()
         if (ey == player[PY] +1)
         {
             if (ex == player[PX] || ex == (player[PX] - 1) || ex == (player[PX] + 1))KillEnemy(i);
+        }
+
+    }
+
+}
+void AttackUp()
+{
+
+    arena[player[PX]-1][player[PY]] = '-';
+    if (arena[player[PX] - 1][player[PY] + 1] == ' ')arena[player[PX] - 1][player[PY] + 1] = '\\';
+    if (arena[player[PX] - 1][player[PY] - 1] == ' ')arena[player[PX] - 1][player[PY] - 1] = '/';
+
+    for (int i = 0; i < EnemyCount; i++)
+    {
+        int ex = EnemyX[i];
+        int ey = EnemyY[i];
+        if (ex == player[PX] - 1)
+        {
+            if (ey == player[PY] || ey == (player[PY] - 1) || ey == (player[PY] + 1))KillEnemy(i);
+        }
+
+    }
+
+}
+void AttackDown()
+{
+
+    arena[player[PX] + 1][player[PY]] = '_';
+    if (arena[player[PX] + 1][player[PY] + 1] == ' ')arena[player[PX] + 1][player[PY] + 1] = '/';
+    if (arena[player[PX] + 1][player[PY] - 1] == ' ')arena[player[PX] + 1][player[PY] - 1] = '\\';
+
+    for (int i = 0; i < EnemyCount; i++)
+    {
+        int ex = EnemyX[i];
+        int ey = EnemyY[i];
+        if (ex == player[PX] + 1)
+        {
+            if (ey == player[PY] || ey == (player[PY] - 1) || ey == (player[PY] + 1))KillEnemy(i);
         }
 
     }
