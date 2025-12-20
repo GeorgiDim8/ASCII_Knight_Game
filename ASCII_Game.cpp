@@ -3,9 +3,8 @@
 #include<conio.h>
 #include<cstdlib>
 #include<windows.h>
-#include<vector>
 
-int HP = 5;
+
 char input;
 bool gameover = false;
 bool levelwon = false;
@@ -18,14 +17,14 @@ char arena[A_HEIGHT][A_WIDTH] = {};
 int PlatformISave[10] = {};
 int PlatformJSave[10] = {};
 
-int* EnemyX;
-int* EnemyY;
-int* EnemyVelX;
-int* EnemyVelY;
-char* EnemyType;
-int* EnemyHP;
+int* EnemyX = new int[10];
+int* EnemyY = new int[10];
+int* EnemyVelX = new int[10];
+int* EnemyVelY = new int[10];
+char* EnemyType = new char[10];
+int* EnemyHP = new int[10];
 
-std::vector<int> player;
+int* player = new int[10];
 enum PlayerTypes { PX, PY, PHP, PFALL, PDOUBLEJ };
 
 void InitializeArena();
@@ -38,7 +37,7 @@ bool EnemyCollisionCheck(int);
 
 void UpdateWalker(int);
 void UpdateJumper(int);
-//void UpdateFlier(int);
+void UpdateFlier(int);
 void UpdateCrawler(int);
 //void UpdateBoss(int);
 
@@ -64,19 +63,19 @@ void InitializeEnemies()
     EnemyType = new char[ENEMY_MAX];
     EnemyHP = new int[ENEMY_MAX];
 
-    AddEnemy(A_HEIGHT - 2, A_WIDTH - 2, 'E', 2, 0, 1);
+    AddEnemy(A_HEIGHT - 2, A_WIDTH - 2, 'E', 1, 0, 1);
 
     for(int i = 0; i < 10; i++) {
         if (!PlatformISave[i])break;
-        if(PlatformISave[i]-1>3)AddEnemy(PlatformISave[i] - 1, PlatformJSave[i]+1, 'E', 2, 0, 1);
+        if(PlatformISave[i]-1>3)AddEnemy(PlatformISave[i] - 1, PlatformJSave[i]+1, 'E', 1, 0, 1);
 
     }
 
-    AddEnemy(A_HEIGHT - 2, A_WIDTH - 2, 'C', 2, 1, 0);
-    AddEnemy(A_HEIGHT - 3, 1, 'C', 2, 1, 0);
+    AddEnemy(A_HEIGHT - 2, A_WIDTH - 2, 'C', 1, 1, 0);
+    AddEnemy(A_HEIGHT - 3, 1, 'C', 1, 1, 0);
 
-    AddEnemy(A_HEIGHT - 2, 4, 'J', 2, 0, 1);
-   
+    AddEnemy(A_HEIGHT - 2, 4, 'J', 1, 0, 1);
+    AddEnemy(2, 4, 'F', 1, 0, 1);
 
 }
 
@@ -114,7 +113,7 @@ void UpdateEnemies()
         char x = EnemyType[i];
         if (x == 'E')UpdateWalker(i);
         else if (x == 'J')UpdateJumper(i);
-        //else if (x == 'F')UpdateFlier(i);
+        else if (x == 'F')UpdateFlier(i);
         else if (x == 'C')UpdateCrawler(i);
         //else if (x == 'B')UpdateBoss(i);
     }
@@ -152,6 +151,7 @@ void UpdateJumper(int index)
             EnemyVelX[index] = 0;
             EnemyVelY[index] = 1;
         }
+
     }
    
         else
@@ -159,7 +159,7 @@ void UpdateJumper(int index)
           
          
             int r = rand() % 10;
-            if (r % 5 == 1) {
+            if (r % 10 == 1) {
                 EnemyX[index] -= (Jump_Max_Height(EnemyX[index], EnemyY[index], 7)-1);
                 EnemyVelX[index] = 1;
                 EnemyVelY[index] = 0;
@@ -174,6 +174,36 @@ void UpdateJumper(int index)
             EnemyX[index] += EnemyVelX[index];
     
 }
+
+void UpdateFlier(int index) 
+{
+    int r = rand() % 40;
+    if (EnemyVelX[index])
+    {
+        if (arena[EnemyX[index] + 1][EnemyY[index] + EnemyVelY[index]] == '#' || arena[EnemyX[index] + 1][EnemyY[index] + EnemyVelY[index]] == '=')
+        {
+            EnemyVelX[index] = 0;
+            EnemyVelY[index] = -1;
+            return;
+        }
+        if (r % 4 == 0)EnemyVelX[index] = 0;
+    }
+
+    else
+    { 
+        if (r % 40 == 0) {
+            EnemyVelX[index] = 1;
+           
+            return;
+        }
+        if (EnemyCollisionCheck(index)) EnemyVelY[index] = -EnemyVelY[index];
+
+    }
+    EnemyY[index] += EnemyVelY[index];
+    EnemyX[index] += EnemyVelX[index];
+
+}
+
 
 int Jump_Max_Height(int start, int py, int span)
 {
@@ -222,14 +252,14 @@ void CharacterControl()
         {
             if (player[PFALL] == 0)
             {
-                JumpSize = Jump_Max_Height(player[PX], player[PY], 7);
+                JumpSize = Jump_Max_Height(player[PX], player[PY], 10);
                 player[PFALL] = JumpSize;
                 player[PX] -= JumpSize;
             }
 
             else if (!player[PDOUBLEJ])
             {
-                JumpSize = Jump_Max_Height(player[PX], player[PY], 3);
+                JumpSize = Jump_Max_Height(player[PX], player[PY], 7);
                 player[PFALL] += JumpSize;
                 player[PDOUBLEJ] = 1;
                 player[PX] -= JumpSize;
@@ -358,11 +388,11 @@ void HideCursor()
 
 void InitializePlayer()
 {
-    player.push_back(A_HEIGHT - 2);
-    player.push_back(A_WIDTH / 2);
-    player.push_back(5);
-    player.push_back(0);
-    player.push_back(0);
+    player[PX] = A_HEIGHT - 2;
+    player[PY] = A_WIDTH / 2;
+    player[PHP] = 5;
+    player[PFALL] = 0;
+    player[PDOUBLEJ] = 0;
 }
 
 int main()
@@ -374,8 +404,9 @@ int main()
     HideCursor();
     while (!gameover && !levelwon)
     {
-        CharacterControl();
+        
         UpdateEnemies();
+        CharacterControl();
         Graphics();
 
         ResetCursor();
