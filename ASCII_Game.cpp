@@ -19,12 +19,12 @@ char arena[A_HEIGHT][A_WIDTH] = {};
 int PlatformISave[10] = {};
 int PlatformJSave[10] = {};
 
-int* EnemyX;
-int* EnemyY;
-int* EnemyVelX;
-int* EnemyVelY;
-char* EnemyType;
-int* EnemyHP;
+int* EnemyX = new int[ENEMY_MAX];
+int* EnemyY = new int[ENEMY_MAX];
+int* EnemyVelX = new int[ENEMY_MAX];
+int* EnemyVelY = new int[ENEMY_MAX];
+char* EnemyType = new char[ENEMY_MAX];
+int* EnemyHP = new int[ENEMY_MAX];
 
 int* player = new int[10];
 enum PlayerTypes { PX, PY, PHP, PFALL, PDOUBLEJ,PAT,PATDUR };
@@ -36,6 +36,9 @@ void AddEnemy(int, int, char, int, int, int);
 void KillEnemy(int);
 void UpdateEnemies();
 bool EnemyCollisionCheck(int);
+//void Wave1();
+//void Wave2();
+void Wave3();
 
 void UpdateWalker(int);
 void UpdateJumper(int);
@@ -63,7 +66,7 @@ int  Jump_Max_Height(int, int, int);
 
 
 
-void InitializeEnemies()
+/*void InitializeEnemies()
 {
     EnemyX = new int[ENEMY_MAX];
     EnemyY = new int[ENEMY_MAX];
@@ -72,11 +75,45 @@ void InitializeEnemies()
     EnemyType = new char[ENEMY_MAX];
     EnemyHP = new int[ENEMY_MAX];
 
+
+}
+*/
+void Wave1()
+{
+
+    for (int i = 0; i < 10; i++) {
+        if (!PlatformISave[i] || EnemyCount>2)break;
+        if (PlatformISave[i] - 1 > 3 && PlatformISave[i] - 1 < 20)
+            AddEnemy(PlatformISave[i] - 1, PlatformJSave[i] + 1, 'E', 1, 0, 1);
+    }
+
+    AddEnemy(A_HEIGHT - 3, 1, 'C', 1, 1, 0);
+}
+
+
+void Wave2()
+{
     AddEnemy(A_HEIGHT - 2, A_WIDTH - 2, 'E', 1, 0, 1);
 
-    for(int i = 0; i < 10; i++) {
+    for (int i = 0; i < 10; i++) {
+        if (!PlatformISave[i] || EnemyCount>3)break;
+        if (PlatformISave[i] - 1 > 3 && PlatformISave[i] - 1 < 20)
+            AddEnemy(PlatformISave[i] - 1, PlatformJSave[i] + 1, 'E', 1, 0, 1);
+
+    }
+
+
+    AddEnemy(A_HEIGHT - 2, 4, 'J', 1, 0, 1);
+}
+
+
+void Wave3() 
+{
+    AddEnemy(A_HEIGHT - 2, A_WIDTH - 2, 'E', 1, 0, 1);
+
+    for (int i = 0; i < 10; i++) {
         if (!PlatformISave[i])break;
-        if(PlatformISave[i]-1>3 && PlatformISave[i] - 1<20)AddEnemy(PlatformISave[i] - 1, PlatformJSave[i]+1, 'E', 1, 0, 1);
+        if (PlatformISave[i] - 1 > 3 && PlatformISave[i] - 1 < 20)AddEnemy(PlatformISave[i] - 1, PlatformJSave[i] + 1, 'E', 1, 0, 1);
 
     }
 
@@ -85,7 +122,6 @@ void InitializeEnemies()
 
     AddEnemy(A_HEIGHT - 2, 4, 'J', 1, 0, 1);
     AddEnemy(2, 4, 'F', 1, 0, 1);
-
 }
 
 void AddEnemy(int x, int y, char T, int hp, int vx, int vy)
@@ -112,6 +148,7 @@ void KillEnemy(int index)
     EnemyVelY[index] = EnemyVelY[last];
 
     EnemyCount--;
+    if (EnemyCount == 0)levelwon = true;
 
 }
 
@@ -491,6 +528,12 @@ void RandomPlatforms()
     srand(time(0));
     int PlatformI, PlatformJ, PlatformLength;
     int PlatformCount = rand() % 6 + 2;
+    for (int i = 0; i < 10; i++) 
+    {
+        PlatformISave[i] = 0;
+        PlatformJSave[i] = 0;
+    }
+
     for (int i = 0; i < PlatformCount; i++)
     {
 
@@ -568,25 +611,62 @@ void InitializePlayer()
     player[PATDUR] = 0;
 }
 
-int main()
+void Initialize() 
 {
-    int a = 0;
     InitializePlayer();
     InitializeArena();
-    InitializeEnemies();
-    HideCursor();
+   // InitializeEnemies();
+    gameover = false;
+    levelwon = false;
+}
+
+void GameCycle() 
+{
     while (!gameover && !levelwon)
     {
-        
+
         UpdateEnemies();
         CharacterControl();
         UpdatePlayer();
         Graphics();
 
         ResetCursor();
-        Sleep(100);   
+        Sleep(100);
 
     }
+    if (gameover)
+    {
+        std::cout << "You Lost";
+        std::exit(0);
+    }
+}
+
+int main()
+{
+    int a = 0;
+    Initialize();
+    HideCursor();
+    Wave1();
+    std::cout << "WAVE 1" << std::endl;
+    Sleep(1000);
+    GameCycle();
+
+    std::cout << "WAVE 2" << std::endl;
+    Sleep(1000);
+    Initialize();
+    Wave2();
+    GameCycle();
+    
+    std::cout << "WAVE 3" << std::endl;
+    Sleep(1000);
+    Initialize();
+    Wave3();
+    GameCycle();
+   
+
+
+    std::cout << "FINAL BOSS" << std::endl;
+    Sleep(1000);
 
     //Reset Cursor - Gives Rain Graphics
     if (gameover)std::cout << "You Lost" << std::endl;
