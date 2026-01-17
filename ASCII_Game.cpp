@@ -12,6 +12,7 @@ const int JUMP = 10;
 const int D_JUMP = 7;
 const int ATTACK_LENGTH = 3;
 const int BOSS_SPAN = 2;
+const int PLAYER_HP = 5;
 
 char input;
 bool gameover = false;
@@ -34,7 +35,6 @@ enum PlayerTypes { PX, PY, PHP, PFALL, PDOUBLEJ,PATTACK,PATTACKDUR };
 
 void InitializeArena();
 void InitializePlayer();
-void InitializeEnemies();
 void AddEnemy(int, int, char, int, int, int);
 int  DamageEnemy(int);
 void UpdateEnemies();
@@ -88,19 +88,22 @@ void Visualize_Boss(int);
 */
 void Wave1()
 {
+    int count = rand() % 3 + 1;
+
 
     for (int i = 0; i < 10; i++) {
         if (!PlatformISave[i] || EnemyCount>2)break;
         if (PlatformISave[i] - 1 > 3 && PlatformISave[i] - 1 < 20)
             AddEnemy(PlatformISave[i] - 1, PlatformJSave[i] + 1, 'E', 1, 0, 1);
     }
-
-    AddEnemy(A_HEIGHT - 3, 1, 'C', 1, 1, 0);
+    for(int i = 0; i< count;i++)
+    AddEnemy(A_HEIGHT - rand() % 9 -3, 1, 'C', 1, 1, 0);
 }
 
 
 void Wave2()
 {
+    int count = rand() % 3 + 1;
     AddEnemy(A_HEIGHT - 2, A_WIDTH - 2, 'E', 1, 0, 1);
 
     for (int i = 0; i < 10; i++) {
@@ -110,13 +113,14 @@ void Wave2()
 
     }
 
-
-    AddEnemy(A_HEIGHT - 2, 4, 'J', 1, 0, 1);
+    for (int i = 0; i < count; i++)
+    AddEnemy(A_HEIGHT - 2, 4+rand()%15, 'J', 1, 0, 1);
 }
 
 
 void Wave3() 
 {
+    int count = rand() % 3 + 1;
     AddEnemy(A_HEIGHT - 2, A_WIDTH - 2, 'E', 1, 0, 1);
 
     for (int i = 0; i < 10; i++) {
@@ -124,12 +128,18 @@ void Wave3()
         if (PlatformISave[i] - 1 > 3 && PlatformISave[i] - 1 < 20)AddEnemy(PlatformISave[i] - 1, PlatformJSave[i] + 1, 'E', 1, 0, 1);
 
     }
-
-    AddEnemy(A_HEIGHT - 2, A_WIDTH - 2, 'C', 1, 1, 0);
-    AddEnemy(A_HEIGHT - 3, 1, 'C', 1, 1, 0);
+    for (int i = 0; i < count; i++)
+        AddEnemy(A_HEIGHT - 2 - rand() % 9, A_WIDTH - 2, 'C', 1, 1, 0);
+   
+    count = rand() % 3 + 1;
+    for (int i = 0; i < count; i++)
+    AddEnemy(A_HEIGHT - 3 - rand()%9, 1, 'C', 1, 1, 0);
 
     AddEnemy(A_HEIGHT - 2, 4, 'J', 1, 0, 1);
-    AddEnemy(2, 4, 'F', 1, 0, 1);
+
+    count = rand() % 3 + 1;
+    for (int i = 0; i < count; i++)
+    AddEnemy(2, 4+rand()%30, 'F', 1, 0, 1);
 }
 
 void BossWave() 
@@ -725,7 +735,7 @@ void InitializePlayer()
 {
     player[PX] = A_HEIGHT - 2;
     player[PY] = A_WIDTH / 2;
-    player[PHP] = 5;
+    player[PHP] += 1;
     player[PFALL] = 0;
     player[PDOUBLEJ] = 0;
     player[PATTACK] = 0;
@@ -778,9 +788,10 @@ void GameCycle()
 int main()
 {
     int a = 0;
+    player[PHP] = PLAYER_HP-1;
     Initialize();
     HideCursor();
-    Wave1();
+    Wave3();
     std::cout << "WAVE 1" << std::endl;
     Sleep(1000);
     GameCycle();
