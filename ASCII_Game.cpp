@@ -11,6 +11,7 @@ const int ENEMY_MAX = 10;
 const int JUMP = 10;
 const int D_JUMP = 7;
 const int ATTACK_LENGTH = 3;
+const int BOSS_SPAN = 2;
 
 char input;
 bool gameover = false;
@@ -35,19 +36,21 @@ void InitializeArena();
 void InitializePlayer();
 void InitializeEnemies();
 void AddEnemy(int, int, char, int, int, int);
-void KillEnemy(int);
+int  DamageEnemy(int);
 void UpdateEnemies();
 bool EnemyCollisionCheck(int);
+bool BossCollisionCheck(int);
 void Cleanup(); 
-//void Wave1();
-//void Wave2();
+void Wave1();
+void Wave2();
 void Wave3();
+void BossWave();
 
 void UpdateWalker(int);
 void UpdateJumper(int);
 void UpdateFlier(int);
 void UpdateCrawler(int);
-//void UpdateBoss(int);
+void UpdateBoss(int);
 
 void CharacterControl();
 void UpdatePlayer();
@@ -66,6 +69,8 @@ void ColorCharacters();
 void ColorAttribute(int x, int y, char sym);
 void Check_Fall(int, int);
 int  Jump_Max_Height(int, int, int);
+int  Check_Boss_X(int);
+void Visualize_Boss(int);
 
 
 
@@ -127,6 +132,11 @@ void Wave3()
     AddEnemy(2, 4, 'F', 1, 0, 1);
 }
 
+void BossWave() 
+{
+    AddEnemy(A_HEIGHT - 3, 30, 'B', 5, 0, 0);
+}
+
 void AddEnemy(int x, int y, char T, int hp, int vx, int vy)
 {
     if (EnemyCount > ENEMY_MAX)return;
@@ -139,9 +149,11 @@ void AddEnemy(int x, int y, char T, int hp, int vx, int vy)
     EnemyCount++;
 }
 
-void KillEnemy(int index)
+int DamageEnemy(int index)
 {
-    if (index >= ENEMY_MAX || index < 0)return;
+    if (index >= ENEMY_MAX || index < 0)return index;
+    EnemyHP[index]--;
+    if (EnemyHP[index])return index;
     int last = EnemyCount - 1;
     EnemyX[index] = EnemyX[last];
     EnemyY[index] = EnemyY[last];
@@ -152,7 +164,7 @@ void KillEnemy(int index)
 
     EnemyCount--;
     if (EnemyCount == 0)levelwon = true;
-
+    return index - 1;
 }
 
 void UpdateEnemies()
@@ -167,7 +179,7 @@ void UpdateEnemies()
         case 'J': { UpdateJumper(i); break; }
         case 'F': { UpdateFlier(i); break; }
         case 'C': { UpdateCrawler(i); break; }
-      //case 'B': { UpdateBoss(i); break; }
+        case 'B': { UpdateBoss(i); break; }
         }
     }
 
@@ -263,7 +275,81 @@ void UpdateFlier(int index)
     EnemyX[index] += EnemyVelX[index];
 
 }
+void UpdateBoss(int index) 
+{
+    if (EnemyVelX[index])
+    {
+        if (BossCollisionCheck(index) || arena[EnemyX[index]+1][EnemyY[index]+1] == '#' || arena[EnemyX[index]+1][EnemyY[index]+1] == '=' ||
+            arena[EnemyX[index] + 2][EnemyY[index] + 1] == '=' || arena[EnemyX[index]][EnemyY[index] + 1] == '=')
+        {
+            
+            EnemyVelX[index] = 0;
+        }
+    }
+     else 
+        {   
+            EnemyY[index] = player[PY]+rand() % 3;
+            EnemyX[index] = Check_Boss_X(EnemyY[index]);
+            EnemyVelX[index] = 1;
+            if (EnemyY[index] == 0) {
+                std::cout << "Warning" << std::endl; return;}
+            
+       }
+        Visualize_Boss(index);
+        EnemyX[index] += EnemyVelX[index];
 
+
+}
+
+bool BossCollisionCheck(int index) 
+{
+    char next1 = arena[EnemyX[index] + EnemyVelX[index]][EnemyY[index]];
+    char next2 = arena[EnemyX[index] + EnemyVelX[index]][EnemyY[index]+1];
+    char next3 = arena[EnemyX[index] + EnemyVelX[index]][EnemyY[index]-1];
+
+    if ((EnemyX[index]+1) == player[PX] &&
+        EnemyY[index] == player[PY] ||
+        (EnemyY[index]+1)==player[PY] && (EnemyX[index]+1) == player[PX] || 
+        (EnemyY[index]-1) == player[PY] && (EnemyX[index]+1) == player[PX] )
+    {
+        player[PHP]-=2;
+        return true;
+    }
+
+    if (next1 != ' ' && next2 != ' ' && next3 != ' ') return true;
+
+    return false;
+}
+
+
+int Check_Boss_X(int y)
+{
+    int x = player[PX]-10;
+    bool possible = false;
+
+    while (!possible && x<A_HEIGHT-3) 
+    {
+        if (arena[x - 1][y - 1] == ' ' && arena[x - 1][y] == ' ' && arena[x - 1][y + 1] == ' ' &&
+            arena[x][y - 1] == ' ' && arena[x][y] == ' ' && arena[x][y + 1] == ' ' &&
+            arena[x + 1][y - 1] == ' ' && arena[x][y + 1] == ' ' && arena[x + 1][y + 1] == ' ')possible = true;
+        else x++;
+    }
+    if (x == A_HEIGHT-3) return 2;
+    return x;
+}
+
+void Visualize_Boss(int i) 
+{
+    arena[EnemyX[i]-1][EnemyY[i]-1] = 'B';
+    arena[EnemyX[i]-1][EnemyY[i]] = 'B';
+    arena[EnemyX[i]-1][EnemyY[i]+1] = 'B';
+    arena[EnemyX[i]][EnemyY[i]-1] = 'B';
+    arena[EnemyX[i]][EnemyY[i]] = 'B';
+    arena[EnemyX[i]][EnemyY[i]+1] = 'B';
+    arena[EnemyX[i]+1][EnemyY[i]-1] = 'B';
+    arena[EnemyX[i]+1][EnemyY[i]] = 'B';
+    arena[EnemyX[i]+1][EnemyY[i]+1] = 'B';
+}
 
 int Jump_Max_Height(int start, int py, int span)
 {
@@ -441,19 +527,24 @@ void AttackLeft()
     arena[player[PX]-1][player[PY] - 1] = '/';
     if(arena[player[PX]+1][player[PY]-1]==' ')arena[player[PX] + 1][player[PY] - 1] = '\\';
 
+    int span = 1;
+    if (EnemyType[0] == 'B')span = BOSS_SPAN;
+
+
     for (int i = 0; i < EnemyCount; i++) 
     {
         int ex = EnemyX[i];
         int ey = EnemyY[i];
-        if (ey == player[PY] - 1) 
+        if (ey == player[PY] - span) 
         {
             if (ex == player[PX] || ex == (player[PX] - 1) || ex == (player[PX] + 1)) {
-                KillEnemy(i);
-                i--;
+                i = DamageEnemy(i);
+                
             }
         } 
 
     }
+
 
 }
 void AttackRight()
@@ -463,13 +554,16 @@ void AttackRight()
     arena[player[PX] - 1][player[PY] + 1] = '\\';
     if (arena[player[PX] + 1][player[PY] + 1] == ' ')arena[player[PX] + 1][player[PY] + 1] = '/';
 
+    int span = 1;
+    if (EnemyType[0] == 'B')span = BOSS_SPAN;
+
     for (int i = 0; i < EnemyCount; i++)
     {
         int ex = EnemyX[i];
         int ey = EnemyY[i];
-        if (ey == player[PY] +1)
+        if (ey == player[PY] + span)
         {
-            if (ex == player[PX] || ex == (player[PX] - 1) || ex == (player[PX] + 1))KillEnemy(i);
+            if (ex == player[PX] || ex == (player[PX] - 1) || ex == (player[PX] + 1))i=DamageEnemy(i);
         }
 
     }
@@ -482,13 +576,16 @@ void AttackUp()
     if (arena[player[PX] - 1][player[PY] + 1] == ' ')arena[player[PX] - 1][player[PY] + 1] = '\\';
     if (arena[player[PX] - 1][player[PY] - 1] == ' ')arena[player[PX] - 1][player[PY] - 1] = '/';
 
+    int span = 1;
+    if (EnemyType[0] == 'B')span = BOSS_SPAN;
+
     for (int i = 0; i < EnemyCount; i++)
     {
         int ex = EnemyX[i];
         int ey = EnemyY[i];
-        if (ex == player[PX] - 1)
+        if (ex == player[PX] - span)
         {
-            if (ey == player[PY] || ey == (player[PY] - 1) || ey == (player[PY] + 1))KillEnemy(i);
+            if (ey == player[PY] || ey == (player[PY] - 1) || ey == (player[PY] + 1))i=DamageEnemy(i);
         }
 
     }
@@ -501,13 +598,16 @@ void AttackDown()
     if (arena[player[PX] + 1][player[PY] + 1] == ' ')arena[player[PX] + 1][player[PY] + 1] = '/';
     if (arena[player[PX] + 1][player[PY] - 1] == ' ')arena[player[PX] + 1][player[PY] - 1] = '\\';
 
+    int span = 1;
+    if (EnemyType[0] == 'B')span = BOSS_SPAN;
+
     for (int i = 0; i < EnemyCount; i++)
     {
         int ex = EnemyX[i];
         int ey = EnemyY[i];
-        if (ex == player[PX] + 1)
+        if (ex == player[PX] + span)
         {
-            if (ey == player[PY] || ey == (player[PY] - 1) || ey == (player[PY] + 1))KillEnemy(i);
+            if (ey == player[PY] || ey == (player[PY] - 1) || ey == (player[PY] + 1))i=DamageEnemy(i);
         }
 
     }
@@ -573,7 +673,7 @@ void RandomPlatforms()
 void Graphics()
 {
     
-    std::cout << "HP: " << player[PHP] << "      " << "(a/ d move, w jump, double jump, i/j/k/l attack) PFALL - " << player[PATTACK] << " "<<player[PATTACKDUR]<< std::endl;
+    std::cout << "HP: " << player[PHP] << "      " << "(a/ d move, w jump, double jump, i/j/k/l attack) PFALL - " << EnemyHP[0]<< std::endl;
 
     arena[player[0]][player[1]] = '@';
 
@@ -701,9 +801,13 @@ int main()
 
     std::cout << "FINAL BOSS" << std::endl;
     Sleep(1000);
+    Initialize();
+    BossWave();
+    GameCycle();
 
-    //Reset Cursor - Gives Rain Graphics
+    ResetCursor();
     if (gameover)std::cout << "You Lost" << std::endl;
+    else std::cout << "YOU WON" << std::endl;
     Cleanup();
 
 
