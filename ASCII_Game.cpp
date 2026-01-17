@@ -5,14 +5,16 @@
 #include<windows.h>
 
 
-char input;
-bool gameover = false;
-bool levelwon = false;
 const int A_HEIGHT = 20;
 const int A_WIDTH = 70;
 const int ENEMY_MAX = 10;
 const int JUMP = 10;
 const int D_JUMP = 7;
+const int ATTACK_LENGTH = 3;
+
+char input;
+bool gameover = false;
+bool levelwon = false;
 int EnemyCount = 0;
 char arenaT[A_HEIGHT][A_WIDTH] = {};
 char arena[A_HEIGHT][A_WIDTH] = {};
@@ -27,7 +29,7 @@ char* EnemyType = new char[ENEMY_MAX];
 int* EnemyHP = new int[ENEMY_MAX];
 
 int* player = new int[10];
-enum PlayerTypes { PX, PY, PHP, PFALL, PDOUBLEJ,PAT,PATDUR };
+enum PlayerTypes { PX, PY, PHP, PFALL, PDOUBLEJ,PATTACK,PATTACKDUR };
 
 void InitializeArena();
 void InitializePlayer();
@@ -36,6 +38,7 @@ void AddEnemy(int, int, char, int, int, int);
 void KillEnemy(int);
 void UpdateEnemies();
 bool EnemyCollisionCheck(int);
+void Cleanup(); 
 //void Wave1();
 //void Wave2();
 void Wave3();
@@ -157,11 +160,15 @@ void UpdateEnemies()
     for (int i = 0; i < EnemyCount; i++)
     {
         char x = EnemyType[i];
-        if (x == 'E')UpdateWalker(i);
-        else if (x == 'J')UpdateJumper(i);
-        else if (x == 'F')UpdateFlier(i);
-        else if (x == 'C')UpdateCrawler(i);
-        //else if (x == 'B')UpdateBoss(i);
+
+        switch (x)
+        {
+        case 'E': { UpdateWalker(i); break; }
+        case 'J': { UpdateJumper(i); break; }
+        case 'F': { UpdateFlier(i); break; }
+        case 'C': { UpdateCrawler(i); break; }
+      //case 'B': { UpdateBoss(i); break; }
+        }
     }
 
 }
@@ -288,68 +295,82 @@ void CharacterControl()
         char key = _getch();
         int JumpSize;
 
-        if (key == 'A' || key == 'a')
+        switch (key) 
         {
-            if (arena[player[PX]][player[PY] - 1] == ' ')player[PY]--;
-            Check_Fall(player[PX], player[PY]);
-        }
-
-        else if (key == 'D' || key == 'd')
-        {
-            if (arena[player[PX]][player[PY] + 1] == ' ')player[PY]++;
-            Check_Fall(player[PX], player[PY]);
-        }
-        else if (key == 'W' || key == 'w')
-        {
-            if (player[PFALL] == 0)
+        case 'A':
+        case 'a': 
             {
+                if (arena[player[PX]][player[PY] - 1] == ' ')player[PY]--;
+                Check_Fall(player[PX], player[PY]);
+                break;
+            }
+        case 'D':
+        case 'd':
+            {
+                if (arena[player[PX]][player[PY] + 1] == ' ')player[PY]++;
+                Check_Fall(player[PX], player[PY]);
+                break;
+            }
+        case 'W':
+        case 'w':
+            {
+                if (player[PFALL] == 0)
+                {
                 JumpSize = Jump_Max_Height(player[PX], player[PY], JUMP);
                 player[PFALL] = JumpSize;
                 player[PX] -= JumpSize;
-            }
+                }
 
-            else if (!player[PDOUBLEJ])
-            {
+                else if (!player[PDOUBLEJ])
+                {
                 JumpSize = Jump_Max_Height(player[PX], player[PY], D_JUMP);
                 player[PFALL] += JumpSize;
                 player[PDOUBLEJ] = 1;
                 player[PX] -= JumpSize;
+                }
+                break;
             }
-
-
-        }
-        else if (key == 'i' || key == 'I') 
-        {
-            if(!player[PAT]){
-            player[PAT] = 1;
-            player[PATDUR] = 3;
+        case 'I':
+        case 'i':
+            {
+                if (!player[PATTACK]) {
+                player[PATTACK] = 1;
+                player[PATTACKDUR] = ATTACK_LENGTH;
+                }
+                break;
             }
-        }
-        else if (key == 'j' || key == 'J')
-        {
-            if (!player[PAT]) {
-                player[PAT] = 2;
-                player[PATDUR] = 3;
+        case 'J':
+        case 'j':
+            {
+                if (!player[PATTACK]) {
+                player[PATTACK] = 2;
+                player[PATTACKDUR] = ATTACK_LENGTH;
+                }
+                break;
             }
-        }
-        else if (key == 'k' || key == 'K')
-        {
-            if (!player[PAT]) {
-                player[PAT] = 3;
-                player[PATDUR] = 3;
+        case 'K':
+        case 'k':
+            {
+                if (!player[PATTACK]) {
+                player[PATTACK] = 3;
+                player[PATTACKDUR] = ATTACK_LENGTH;
+                }
+                break;
             }
-        }
-        else if (key == 'l' || key == 'L')
-        {
-            if (!player[PAT]) {
-                player[PAT] = 4;
-                player[PATDUR] = 3;
+        case 'L':
+        case 'l':
+            {
+                if (!player[PATTACK]) {
+                player[PATTACK] = 4;
+                player[PATTACKDUR] = ATTACK_LENGTH;
+                }
+                break;
             }
 
         }
 
     }
-
+    
     
 }
 void UpdatePlayer() 
@@ -370,7 +391,7 @@ void UpdatePlayer()
 
         if (!player[PFALL])player[PDOUBLEJ] = 0;
     }
-    if (player[PAT]) 
+    if (player[PATTACK]) 
     {
         VisualizeAttack();
     }
@@ -382,27 +403,27 @@ void UpdatePlayer()
 
 void VisualizeAttack()
 {
-    int at = player[PAT];
-    if (player[PATDUR] && CheckAttack()) 
+    int at = player[PATTACK];
+    if (player[PATTACKDUR] && CheckAttack()) 
     {
         if (at == 1)AttackUp();
         else if (at == 2)AttackLeft();
         else if (at == 3)AttackDown();
         else if (at == 4)AttackRight();
 
-         player[PATDUR]--;
+         player[PATTACKDUR]--;
     }
     else 
     {
-        player[PAT] = 0;
-        player[PATDUR] = 0;
+        player[PATTACK] = 0;
+        player[PATTACKDUR] = 0;
     }
 
 }
 
 bool CheckAttack() 
 {
-    int at = player[PAT];
+    int at = player[PATTACK];
     if (at == 1 && arena[player[PX] - 1][player[PY]] != '=')return true;
 
     if (at == 2 && arena[player[PX]][player[PY] - 1] != '#')return true;
@@ -538,8 +559,8 @@ void RandomPlatforms()
     {
 
         PlatformI = (rand() % 5) * 3 + 4;
-        PlatformJ = rand() % 60;
-        PlatformLength = min(rand() % 15 + 5, A_WIDTH - PlatformJ - 2);
+        PlatformJ = rand() % (A_WIDTH-10);
+        PlatformLength = min(rand() % (A_HEIGHT-5) + 5, A_WIDTH - PlatformJ - 2);
 
         for (int s = 0; s < PlatformLength; s++)arenaT[PlatformI][PlatformJ + s] = '=';
 
@@ -552,7 +573,7 @@ void RandomPlatforms()
 void Graphics()
 {
     
-    std::cout << "HP: " << player[PHP] << "      " << "(a/ d move, w jump, double jump, i/j/k/l attack) PFALL - " << player[PAT] << " "<<player[PATDUR]<< std::endl;
+    std::cout << "HP: " << player[PHP] << "      " << "(a/ d move, w jump, double jump, i/j/k/l attack) PFALL - " << player[PATTACK] << " "<<player[PATTACKDUR]<< std::endl;
 
     arena[player[0]][player[1]] = '@';
 
@@ -607,8 +628,21 @@ void InitializePlayer()
     player[PHP] = 5;
     player[PFALL] = 0;
     player[PDOUBLEJ] = 0;
-    player[PAT] = 0;
-    player[PATDUR] = 0;
+    player[PATTACK] = 0;
+    player[PATTACKDUR] = 0;
+}
+
+void Cleanup()
+{
+    delete[] EnemyX;
+    delete[] EnemyY;
+    delete[] EnemyVelX;
+    delete[] EnemyVelY;
+    delete[] EnemyType;
+    delete[] EnemyHP;
+
+    delete[] player;
+
 }
 
 void Initialize() 
@@ -670,6 +704,7 @@ int main()
 
     //Reset Cursor - Gives Rain Graphics
     if (gameover)std::cout << "You Lost" << std::endl;
+    Cleanup();
 
 
     return 0;
