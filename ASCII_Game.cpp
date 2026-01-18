@@ -287,6 +287,7 @@ void UpdateFlier(int index)
 }
 void UpdateBoss(int index) 
 {
+    if (!EnemyCount)return;
     if (EnemyVelX[index])
     {
         if (BossCollisionCheck(index) || arena[EnemyX[index]+1][EnemyY[index]+1] == '#' || arena[EnemyX[index]+1][EnemyY[index]+1] == '=' ||
@@ -350,15 +351,22 @@ int Check_Boss_X(int y)
 
 void Visualize_Boss(int i) 
 {
-    arena[EnemyX[i]-1][EnemyY[i]-1] = 'B';
-    arena[EnemyX[i]-1][EnemyY[i]] = 'B';
-    arena[EnemyX[i]-1][EnemyY[i]+1] = 'B';
-    arena[EnemyX[i]][EnemyY[i]-1] = 'B';
-    arena[EnemyX[i]][EnemyY[i]] = 'B';
-    arena[EnemyX[i]][EnemyY[i]+1] = 'B';
-    arena[EnemyX[i]+1][EnemyY[i]-1] = 'B';
-    arena[EnemyX[i]+1][EnemyY[i]] = 'B';
-    arena[EnemyX[i]+1][EnemyY[i]+1] = 'B';
+    if (!EnemyCount)return;
+    int x = EnemyX[i];
+    int y = EnemyY[i];
+    if (x <= 1)x = 2;
+    else if (x >= A_HEIGHT - 1)x = A_HEIGHT - 2;
+    if (y <= 1)y = 2;
+    else if (y >= A_WIDTH - 1)y = A_WIDTH - 2;
+    arena[x-1][y-1] = 'B';
+    arena[x-1][y] = 'B';
+    arena[x-1][y+1] = 'B';
+    arena[x][y-1] = 'B';
+    arena[x][y] = 'B';
+    arena[x][y+1] = 'B';
+    arena[x+1][y-1] = 'B';
+    arena[x+1][y] = 'B';
+    arena[x+1][y+1] = 'B';
 }
 
 int Jump_Max_Height(int start, int py, int span)
@@ -683,7 +691,7 @@ void RandomPlatforms()
 void Graphics()
 {
     
-    std::cout << "HP: " << player[PHP] << "      " << "(a/ d move, w jump, double jump, i/j/k/l attack) PFALL - " << EnemyHP[0]<< std::endl;
+    std::cout << "HP: " << player[PHP] << "      " << "(a/ d move, w jump, double jump, i/j/k/l attack)" << std::endl;
 
     arena[player[0]][player[1]] = '@';
 
@@ -754,6 +762,18 @@ void Cleanup()
     delete[] player;
 
 }
+void Loss() 
+{
+    InitializeArena();
+    char end[10] = "You lost ";
+    for (int z = 0; z < 8; z++)arena[10][30 + z] = end[z];
+
+    for (int i = 0; i < A_HEIGHT; i++)
+    {
+        for (int j = 0; j < A_WIDTH; j++)std::cout << arena[i][j];
+        std::cout << std::endl;
+    }
+}
 
 void Initialize() 
 {
@@ -780,7 +800,7 @@ void GameCycle()
     }
     if (gameover)
     {
-        std::cout << "You Lost";
+        Loss();
         std::exit(0);
     }
 }
@@ -791,7 +811,7 @@ int main()
     player[PHP] = PLAYER_HP-1;
     Initialize();
     HideCursor();
-    Wave3();
+    Wave1();
     std::cout << "WAVE 1" << std::endl;
     Sleep(1000);
     GameCycle();
@@ -799,6 +819,7 @@ int main()
     std::cout << "WAVE 2" << std::endl;
     Sleep(1000);
     Initialize();
+    ResetCursor();
     Wave2();
     GameCycle();
     
@@ -816,7 +837,7 @@ int main()
     BossWave();
     GameCycle();
 
-    ResetCursor();
+    //ResetCursor();
     if (gameover)std::cout << "You Lost" << std::endl;
     else std::cout << "YOU WON" << std::endl;
     Cleanup();
