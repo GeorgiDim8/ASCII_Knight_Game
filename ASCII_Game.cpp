@@ -1,3 +1,18 @@
+/**
+*
+* Solution to course project # 10
+* Introduction to programming course
+* Faculty of Mathematics and Informatics of Sofia University
+* Winter semester 2025/2026
+*
+* @author Georgi Nikolaev Dimitrov
+* @idnumber 9MI0600687
+* @compiler VC
+*
+* Game file
+*
+*/
+
 #include<iostream>
 #include<ctime>
 #include<conio.h>
@@ -73,19 +88,6 @@ int  Check_Boss_X(int);
 void Visualize_Boss(int);
 
 
-
-/*void InitializeEnemies()
-{
-    EnemyX = new int[ENEMY_MAX];
-    EnemyY = new int[ENEMY_MAX];
-    EnemyVelX = new int[ENEMY_MAX];
-    EnemyVelY = new int[ENEMY_MAX];
-    EnemyType = new char[ENEMY_MAX];
-    EnemyHP = new int[ENEMY_MAX];
-
-
-}
-*/
 void Wave1()
 {
     int count = rand() % 3 + 1;
@@ -471,6 +473,7 @@ void CharacterControl()
                 }
                 break;
             }
+        default: break;
 
         }
 
@@ -855,7 +858,7 @@ int main()
     player[PHP] = PLAYER_HP-1;
     Initialize();
     HideCursor();
-    BossWave();
+    Wave1();
     std::cout << "WAVE 1" << std::endl;
     Sleep(1000);
     GameCycle();
@@ -881,7 +884,6 @@ int main()
     BossWave();
     GameCycle();
 
-    //ResetCursor();
     if (gameover)std::cout << "You Lost" << std::endl;
     else std::cout << "YOU WON" << std::endl;
     Cleanup();
