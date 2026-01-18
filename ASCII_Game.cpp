@@ -149,7 +149,7 @@ void BossWave()
 
 void AddEnemy(int x, int y, char T, int hp, int vx, int vy)
 {
-    if (EnemyCount > ENEMY_MAX)return;
+    if (EnemyCount > ENEMY_MAX-1)return;
     EnemyX[EnemyCount] = x;
     EnemyY[EnemyCount] = y;
     EnemyType[EnemyCount] = T;
@@ -358,6 +358,7 @@ void Visualize_Boss(int i)
     else if (x >= A_HEIGHT - 1)x = A_HEIGHT - 2;
     if (y <= 1)y = 2;
     else if (y >= A_WIDTH - 1)y = A_WIDTH - 2;
+
     arena[x-1][y-1] = 'B';
     arena[x-1][y] = 'B';
     arena[x-1][y+1] = 'B';
@@ -546,7 +547,7 @@ void AttackLeft()
     if(arena[player[PX]+1][player[PY]-1]==' ')arena[player[PX] + 1][player[PY] - 1] = '\\';
 
     int span = 1;
-    if (EnemyType[0] == 'B')span = BOSS_SPAN;
+    if (EnemyCount>0 && EnemyType[0] == 'B')span = BOSS_SPAN;
 
 
     for (int i = 0; i < EnemyCount; i++) 
@@ -573,7 +574,7 @@ void AttackRight()
     if (arena[player[PX] + 1][player[PY] + 1] == ' ')arena[player[PX] + 1][player[PY] + 1] = '/';
 
     int span = 1;
-    if (EnemyType[0] == 'B')span = BOSS_SPAN;
+    if (EnemyCount>0 && EnemyType[0] == 'B')span = BOSS_SPAN;
 
     for (int i = 0; i < EnemyCount; i++)
     {
@@ -595,7 +596,7 @@ void AttackUp()
     if (arena[player[PX] - 1][player[PY] - 1] == ' ')arena[player[PX] - 1][player[PY] - 1] = '/';
 
     int span = 1;
-    if (EnemyType[0] == 'B')span = BOSS_SPAN;
+    if (EnemyCount > 0 && EnemyType[0] == 'B')span = BOSS_SPAN;
 
     for (int i = 0; i < EnemyCount; i++)
     {
@@ -617,7 +618,7 @@ void AttackDown()
     if (arena[player[PX] + 1][player[PY] - 1] == ' ')arena[player[PX] + 1][player[PY] - 1] = '\\';
 
     int span = 1;
-    if (EnemyType[0] == 'B')span = BOSS_SPAN;
+    if (EnemyCount > 0 && EnemyType[0] == 'B')span = BOSS_SPAN;
 
     for (int i = 0; i < EnemyCount; i++)
     {
@@ -704,7 +705,7 @@ void Graphics()
         std::cout << std::endl;
     }
 
-    //ColorCharacters();
+    ColorCharacters();
     Arena_Template();
 
 }
@@ -719,14 +720,58 @@ void ColorAttribute(int x, int y, char sym)
     COORD pos = { x,y };
     HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
     SetConsoleCursorPosition(h, pos);
-    SetConsoleTextAttribute(h, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
-    std::cout << sym;
-    SetConsoleTextAttribute(h, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+    switch (sym)
+    {
+    case '@':{
+        SetConsoleTextAttribute(h, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+        std::cout << sym;
+        SetConsoleTextAttribute(h, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+        break;
+             }
+    case 'E': {
+        SetConsoleTextAttribute(h, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+        std::cout << sym;
+        SetConsoleTextAttribute(h, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+        break;
+
+    }
+    case 'C':{
+        SetConsoleTextAttribute(h, FOREGROUND_RED | FOREGROUND_GREEN);
+        std::cout << sym;
+        SetConsoleTextAttribute(h, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+        break;
+
+             }
+    case 'F':{
+        SetConsoleTextAttribute(h, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE | FOREGROUND_INTENSITY);
+        std::cout << sym;
+        SetConsoleTextAttribute(h, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+        break;
+
+             }
+    case 'J':{
+        SetConsoleTextAttribute(h, FOREGROUND_GREEN | FOREGROUND_INTENSITY);
+        std::cout << sym;
+        SetConsoleTextAttribute(h, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+        break;
+
+             }
+    case 'B':{
+        COORD pos = { x,y-1 };
+        HANDLE h = GetStdHandle(STD_OUTPUT_HANDLE);
+        SetConsoleCursorPosition(h, pos);
+        SetConsoleTextAttribute(h, FOREGROUND_RED | FOREGROUND_INTENSITY);
+        std::cout << sym;
+        SetConsoleTextAttribute(h, FOREGROUND_RED | FOREGROUND_GREEN | FOREGROUND_BLUE);
+        break;
+             }
+    }
 }
 
 void ColorCharacters()
 {
     if (player[PHP])ColorAttribute(player[PY], player[PX] + 1, '@');
+    for(int i=0;i<EnemyCount;i++)ColorAttribute(EnemyY[i], EnemyX[i] + 1, EnemyType[i]);
 }
 
 void HideCursor()
@@ -779,7 +824,6 @@ void Initialize()
 {
     InitializePlayer();
     InitializeArena();
-   // InitializeEnemies();
     gameover = false;
     levelwon = false;
 }
@@ -795,7 +839,7 @@ void GameCycle()
         Graphics();
 
         ResetCursor();
-        Sleep(100);
+        Sleep(50);
 
     }
     if (gameover)
@@ -811,7 +855,7 @@ int main()
     player[PHP] = PLAYER_HP-1;
     Initialize();
     HideCursor();
-    Wave1();
+    BossWave();
     std::cout << "WAVE 1" << std::endl;
     Sleep(1000);
     GameCycle();
@@ -829,7 +873,7 @@ int main()
     Wave3();
     GameCycle();
    
-
+   
 
     std::cout << "FINAL BOSS" << std::endl;
     Sleep(1000);
